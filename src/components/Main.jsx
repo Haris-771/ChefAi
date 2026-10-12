@@ -1,8 +1,8 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
 import IngredientsList from "./Ingredients";
 import Recipe from "./Recipe";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Main() {
     const [ingredients, setIngredients] = useState([]);
@@ -37,7 +37,7 @@ export default function Main() {
         setError("");
 
         try {
-            const response = await fetch(`${API_URL}/api/recipe`, {
+            const response = await fetch("/api/recipe", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ingredients }),
