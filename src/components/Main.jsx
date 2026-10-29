@@ -59,14 +59,14 @@ export default function Main() {
     };
 
     return (
-        <main className="my-18 mx-8">
-            <form action={addIngredient} className="mx-auto w-full max-w-xl grid grid-cols-3 gap-3 justify-center">
+        <main className="my-18 mx-5">
+            <form action={addIngredient} className="mx-auto w-full max-w-xl grid grid-cols-3 gap-1 justify-center">
                 <input
                     type="text"
                     aria-label="Add ingredients"
                     placeholder="e.g oregano"
                     name="ingredient"
-                    className="col-span-2 w-full border border-gray-300 rounded-md py-2.5 px-3.5 shadow-xs text-sm focus:outline-hidden focus:border-black"
+                    className="col-span-2 w-full border border-gray-300 rounded-md py-2.5 px-3.5 shadow-xs text-base focus:outline-hidden focus:border-black"
                 />
                 <button
                     type="submit"
