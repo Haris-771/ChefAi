@@ -99,7 +99,7 @@ Return ONLY valid JSON with this exact structure:
   } catch (error) {
     console.error("Error on server:", error);
     return Response.json(
-      { error: "Failed to generate a recipe from AI." },
+      { error: "Failed to generate a recipe from AI. Please try again." },
       { status: 500 },
     );
   }

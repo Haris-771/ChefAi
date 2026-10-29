@@ -60,22 +60,27 @@ export default function Main() {
 
     return (
         <main className="my-18 mx-8">
-            <form action={addIngredient} className="flex justify-center gap-3">
+            <form action={addIngredient} className="mx-auto w-full max-w-xl grid grid-cols-3 gap-3 justify-center">
                 <input
                     type="text"
                     aria-label="Add ingredients"
                     placeholder="e.g oregano"
                     name="ingredient"
-                    className="border border-gray-300 rounded-md py-2.5 px-3.5 shadow-xs flex-1 min-w-37.5 max-w-100 text-sm focus:outline-hidden focus:border-black"
+                    className="col-span-2 w-full border border-gray-300 rounded-md py-2.5 px-3.5 shadow-xs text-sm focus:outline-hidden focus:border-black"
                 />
                 <button
                     type="submit"
-                    className="w-40 bg-black text-[#FAFAF8] rounded-md text-sm font-medium cursor-pointer"
+                    className="col-span-1 w-full bg-black text-[#FAFAF8] rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-gray-800"
                 >
-                    + Add Ingredients
+                    Add Ingredient
                 </button>
             </form>
 
+            {ingredients.length === 0 && (
+                <p className="text-base italic text-gray-800 flex justify-center text-center my-20">
+                    Create a recipe from the ingredients you have on hand
+                </p>
+            )}
             {ingredients.length > 0 && (
                 <IngredientsList
                     recipeRef={recipeSection}
