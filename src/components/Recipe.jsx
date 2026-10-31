@@ -8,6 +8,10 @@ export default function Recipe({ recipe }) {
             <h2 className="font-semibold text-2xl mb-4">Suggested Recipe:</h2>
             <article className="text-gray-600 text-base md:text-base leading-relaxed" aria-live="polite">
                 <p>Based on the ingredients you have available, here is a recipe suggestion:</p>
+                <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-black">
+                    AI-generated recipes may contain missed allergens or restricted ingredients.
+                    Check every ingredient and product label before preparing or eating.
+                </p>
 
                 <h3 className="font-bold text-xl text-[#e66f48] my-8">{recipe.recipeName}</h3>
 

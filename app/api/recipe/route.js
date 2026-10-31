@@ -1,5 +1,24 @@
 import { OpenAI } from "openai";
 
+const allowedRestrictions = [
+  "Vegetarian",
+  "Vegan",
+  "Gluten-free",
+  "Dairy-free",
+  "Nut-free",
+  "Egg-free",
+  "Soy-free",
+  "Shellfish-free",
+];
+
+const normalizeRestrictions = (restrictions) => {
+  if (!Array.isArray(restrictions)) return [];
+
+  return restrictions.filter(
+    (item) => typeof item === "string" && allowedRestrictions.includes(item),
+  );
+};
+
 const normalizeIngredients = (ingredients) => {
   if (Array.isArray(ingredients)) {
     return ingredients
@@ -55,6 +74,11 @@ export async function POST(request) {
 
     const ingredients = normalizeIngredients(body?.ingredients);
 
+    const dietaryRestrictions = normalizeRestrictions(body?.dietaryRestrictions);
+    const restrictionText = dietaryRestrictions.length
+      ? dietaryRestrictions.join(", ")
+      : "none";
+
     if (!ingredients.length) {
       return Response.json({ error: "No ingredients provided" }, { status: 400 });
     }
@@ -70,13 +94,16 @@ export async function POST(request) {
     });
     const ingredientText = ingredients.join(", ");
     const prompt = `You are a professional chef. The user has these ingredients: "${ingredientText}".
-Create a delicious recipe using them.
-Return ONLY valid JSON with this exact structure:
-{
-  "recipeName": "Name of the Dish",
-  "ingredients": ["ingredient 1 with measurements", "ingredient 2 with measurements"],
-  "instructions": ["Step 1 explanation", "Step 2 explanation"]
-}`;
+    The user's dietary restrictions are: ${restrictionText}.
+    Create a delicious recipe using the provided ingredients that strictly follows every selected restriction.
+    Do not include restricted ingredients or suggest them as optional additions. If needed, use suitable unrestricted substitutions.
+    Return ONLY valid JSON with this exact structure:
+    {
+    "recipeName": "Name of the Dish",
+    "ingredients": ["ingredient 1 with measurements", "ingredient 2 with measurements"],
+    "instructions": ["Step 1 explanation", "Step 2 explanation"]
+    }
+    Note: If the user tries to generate something other than a recipe then throw an error`;
 
     const response = await openai.chat.completions.create({
       model: "openai/gpt-oss-120b",

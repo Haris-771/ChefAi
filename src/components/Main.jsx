@@ -7,31 +7,54 @@ import Recipe from "./Recipe";
 export default function Main() {
     const [ingredients, setIngredients] = useState([]);
     const [recipe, setRecipe] = useState(null);
+    const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const recipeSection = useRef(null);
-    
+    const ingredientRefs = useRef({});
+
+    //for auto-scroll
     useEffect(() => {
         if (recipe && recipeSection.current) {
-            recipeSection.current.scrollIntoView({behavior: "smooth"})
+            recipeSection.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [recipe])
+    }, [recipe]);
+
+    //auto focus on editing ingredient
+    useEffect(() => {
+        const activeItem = ingredients.find((item) => item.isEditing);
+
+        if (activeItem && ingredientRefs.current[activeItem.id]) {
+            const el = ingredientRefs.current[activeItem.id];
+            el.focus();
+
+            //focus at the end
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(el);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }, [ingredients]);
 
     const addIngredient = (formData) => {
         const newIngredient = formData.get("ingredient");
 
-        if (!newIngredient || !newIngredient.trim()) {
-            return;
-        }
+        if (!newIngredient || !newIngredient.trim()) return;
 
-        setIngredients((prev) => [...prev, newIngredient.trim()]);
+        setIngredients((prev) => [
+            ...prev,
+            {
+                id: crypto.randomUUID(),
+                name: newIngredient.trim(),
+                isEditing: false,
+            },
+        ]);
     };
 
     const getRecipe = async () => {
-        if (!ingredients.length) {
-            return;
-        }
+        if (!ingredients.length) return;
 
         setLoading(true);
         setError("");
@@ -40,7 +63,10 @@ export default function Main() {
             const response = await fetch("/api/recipe", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ingredients }),
+                body: JSON.stringify({
+                    ingredients: ingredients.map((item) => item.name),
+                    dietaryRestrictions: dietaryRestrictions,
+                }),
             });
 
             const data = await response.json();
@@ -58,15 +84,104 @@ export default function Main() {
         }
     };
 
+    const toggleEditMode = (id) => {
+        const ingredient = ingredients.find(item => item.id === id);
+
+        if(!ingredient) return;
+
+        //save
+        if(ingredient.isEditing){
+            const newText = ingredientRefs.current[id].innerText.trim();
+
+            if(!newText) return;
+
+            setIngredients(prev => 
+                prev.map(item => 
+                    item.id === id?
+                {
+                    ...item,
+                    name: newText,
+                    isEditing: false
+                } : item
+            ));
+            return;
+        }
+
+        //discard changes if click on another edit
+        const currentlyEditing = ingredients.find(item => item.isEditing);
+
+        if(currentlyEditing){
+            const editingElement = ingredientRefs.current[currentlyEditing.id];
+
+            if(editingElement){
+                editingElement.textContent = currentlyEditing.name;
+            }
+        }
+
+        //toggle
+        setIngredients(prev =>
+            prev.map(item => ({
+                ...item,
+                isEditing: item.id === id
+            }
+        ))
+        );
+    };
+
+    //save by key
+    const handleKeydown = (e, id) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const newText = ingredientRefs.current[id].innerText.trim();
+
+            if (!newText) return;
+
+            setIngredients(prev =>
+                prev.map(item =>
+                    item.id === id
+                        ? { ...item, name: newText, isEditing: false }
+                        : item,
+                ),
+            );
+        }
+
+        if (e.key === "Escape") {
+            e.preventDefault();
+            const ingredient = ingredients.find(item => item.id === id);
+            const element = ingredientRefs.current[id];
+
+            if(ingredient && element){
+                element.textContent = ingredient.name;
+            }
+
+            setIngredients( prev =>
+                prev.map(item =>
+                    item.id === id
+                        ? { ...item, isEditing: false }
+                        : item,
+                ),
+            );
+        }
+    };
+
+    const deleteIngredient = (id) => {
+        setIngredients(prev => 
+            prev.filter(item => item.id !== id)
+        );
+    };
+
     return (
         <main className="my-18 mx-5">
-            <form action={addIngredient} className="mx-auto w-full max-w-xl grid grid-cols-3 gap-1 justify-center">
+            <form
+                action={addIngredient}
+                className="mx-auto w-full max-w-xl grid grid-cols-3 gap-1 justify-center"
+            >
                 <input
                     type="text"
                     aria-label="Add ingredients"
                     placeholder="e.g oregano"
                     name="ingredient"
-                    className="col-span-2 w-full border border-gray-300 rounded-md py-2.5 px-3.5 shadow-xs text-base focus:outline-hidden focus:border-black"
+                    className="col-span-2 w-full border border-gray-300 rounded-md py-2.5 px-3.5 shadow-xs text-base focus:outline-2 focus:outline-black"
                 />
                 <button
                     type="submit"
@@ -83,10 +198,16 @@ export default function Main() {
             )}
             {ingredients.length > 0 && (
                 <IngredientsList
-                    recipeRef={recipeSection}
                     ingredients={ingredients}
+                    recipeRef={recipeSection}
+                    ingredientRefs={ingredientRefs}
                     getRecipe={getRecipe}
                     loading={loading}
+                    toggleEditMode={toggleEditMode}
+                    handleKeydown={handleKeydown}
+                    deleteIngredient={deleteIngredient}
+                    dietaryRestrictions={dietaryRestrictions}
+                    setDietaryRestrictions={setDietaryRestrictions}
                 />
             )}
 
